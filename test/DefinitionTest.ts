@@ -2,6 +2,7 @@ import * as assert from "assert";
 
 import { Schema, type, MapSchema } from "../src";
 import { defineTypes } from "../src/annotations";
+import {applyByteMask} from "./helpers/bytemask";
 
 describe("Definition", () => {
 
@@ -45,7 +46,7 @@ describe("Definition", () => {
             (state as any).name = "hello world!";
 
             const decodedState = new MyExistingStructure();
-            decodedState.decode(state.encode());
+            decodedState.decode(applyByteMask(state.encode()));
             assert.equal((decodedState as any).name, "hello world!");
         });
     });

@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import {applyByteMask} from "./helpers/bytemask";
 import { Reflection, Schema, type, MapSchema, ArraySchema, Context } from "../src";
 
 const testContext = new Context();
@@ -33,14 +34,14 @@ describe("Reflection", () => {
         const state = new State();
         const reflected = new Reflection();
         assert.equal(
-            JSON.stringify(reflected.decode(Reflection.encode(state))),
+            JSON.stringify(reflected.decode(applyByteMask(Reflection.encode(state)))),
             '{"types":[{"id":0,"fields":[{"name":"name","type":"string"},{"name":"x","type":"number"},{"name":"y","type":"number"}]},{"id":1,"fields":[{"name":"fieldString","type":"string"},{"name":"fieldNumber","type":"number"},{"name":"player","type":"ref","referencedType":0},{"name":"arrayOfPlayers","type":"array","referencedType":0},{"name":"mapOfPlayers","type":"map","referencedType":0}]}],"rootType":1}'
         );
     });
 
     it("should initialize ref types with empty structures", () => {
         const state = new State();
-        const stateReflected = Reflection.decode(Reflection.encode(state)) as State;
+        const stateReflected = Reflection.decode(applyByteMask(Reflection.encode(state))) as State;
 
         assert.equal(stateReflected.arrayOfPlayers.length, 0);
         assert.equal(Object.keys(stateReflected.mapOfPlayers).length, 0);
@@ -49,7 +50,7 @@ describe("Reflection", () => {
 
     it("should decode schema and be able to use it", () => {
         const state = new State();
-        const stateReflected = Reflection.decode(Reflection.encode(state)) as State;
+        const stateReflected = Reflection.decode(applyByteMask(Reflection.encode(state)))as State;
 
         assert.deepEqual(state._indexes, stateReflected._indexes);
 
@@ -62,7 +63,7 @@ describe("Reflection", () => {
         })
         state.arrayOfPlayers = new ArraySchema(new Player("in array", 4, 4));
 
-        stateReflected.decode(state.encode());
+        stateReflected.decode(applyByteMask(state.encode()));
         
         assert.equal(stateReflected.fieldString, "Hello world!");
         assert.equal(stateReflected.fieldNumber, 10);
@@ -117,7 +118,7 @@ describe("Reflection", () => {
         const state = new MyState();
         const encodedReflection = Reflection.encode(state);
 
-        const decodedState = Reflection.decode(encodedReflection) as MyState;
+        const decodedState = Reflection.decode(applyByteMask(encodedReflection)) as MyState;
         assert.deepEqual(Object.keys(decodedState._schema.points[0]._schema), ['x', 'y'])
         assert.deepEqual(Object.keys(decodedState._schema.players[0]._schema), ['x', 'y', 'name'])
     });
@@ -129,11 +130,11 @@ describe("Reflection", () => {
         }
 
         const state = new MyState();
-        const decodedState = Reflection.decode(Reflection.encode(state)) as MyState;
+        const decodedState = Reflection.decode(applyByteMask(Reflection.encode(state))) as MyState;
 
         state.mapOfStrings['one'] = "one";
         state.mapOfStrings['two'] = "two";
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(JSON.stringify(decodedState), '{"mapOfStrings":{"one":"one","two":"two"}}');
     });
@@ -145,11 +146,11 @@ describe("Reflection", () => {
         }
 
         const state = new MyState();
-        const decodedState = Reflection.decode(Reflection.encode(state)) as MyState;
+        const decodedState = Reflection.decode(applyByteMask(Reflection.encode(state))) as MyState;
 
         state.arrayOfStrings.push("one")
         state.arrayOfStrings.push("two");
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(JSON.stringify(decodedState), '{"arrayOfStrings":["one","two"]}');
     });
@@ -178,11 +179,11 @@ describe("Reflection", () => {
         state.board = new ArraySchema(0, 0, 0, 0, 0, 0, 0, 0, 0);
         state.players['one'] = 1;
 
-        const decodedState = Reflection.decode(Reflection.encode(state)) as MyState;
-        decodedState.decode(state.encodeAll());
+        const decodedState = Reflection.decode(applyByteMask(Reflection.encode(state))) as MyState;
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
-        const decodedState2 = Reflection.decode(Reflection.encode(state)) as MyState;
-        decodedState2.decode(state.encodeAll());
+        const decodedState2 = Reflection.decode(applyByteMask(Reflection.encode(state))) as MyState;
+        decodedState2.decode(applyByteMask(state.encodeAll()));
 
         assert.equal(JSON.stringify(decodedState),  '{"currentTurn":"one","players":{"one":1},"board":[0,0,0,0,0,0,0,0,0]}');
         assert.equal(JSON.stringify(decodedState2), '{"currentTurn":"one","players":{"one":1},"board":[0,0,0,0,0,0,0,0,0]}');

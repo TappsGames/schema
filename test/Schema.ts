@@ -36,6 +36,9 @@ export class State extends Schema {
 
   @type({ map: Player })
   mapOfPlayers: MapSchema<Player>;
+
+  @type({ map: "int32" })
+  mapOfInt32: MapSchema<number>;
 }
 
 /**

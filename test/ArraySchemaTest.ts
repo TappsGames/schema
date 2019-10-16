@@ -1,6 +1,7 @@
 import * as sinon from "sinon";
 import * as assert from "assert";
 
+import {applyByteMask} from "./helpers/bytemask";
 import { State, Player } from "./Schema";
 import { ArraySchema, Schema, type } from "../src";
 import { logChangeTree } from "./helpers/logging";
@@ -25,7 +26,7 @@ describe("ArraySchema", () => {
         decodedState.arrayOfPlayers.onChange = function(item, i) {};
         const onChangeSpy = sinon.spy(decodedState.arrayOfPlayers, 'onChange');
 
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         sinon.assert.callCount(onAddSpy, 5);
         sinon.assert.callCount(onChangeSpy, 0);
 
@@ -33,14 +34,14 @@ describe("ArraySchema", () => {
 
         const encoded = state.encode();
         assert.equal(encoded.length, 23, "should encode only index changes");
-        decodedState.decode(encoded);
+        decodedState.decode(applyByteMask(encoded));
 
         assert.deepEqual(decodedState.arrayOfPlayers.map(p => p.name), [ 'Five', 'Four', 'Three', 'Two', 'One' ]);
         sinon.assert.callCount(onAddSpy, 5);
         sinon.assert.callCount(onChangeSpy, 5);
 
         state.arrayOfPlayers.sort((a, b) => b.x - a.x);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         sinon.assert.callCount(onAddSpy, 5);
         sinon.assert.callCount(onChangeSpy, 10);
 
@@ -51,7 +52,7 @@ describe("ArraySchema", () => {
             }
 
             state.arrayOfPlayers.sort((a, b) => b.x - a.x);
-            decodedState.decode(state.encode());
+            decodedState.decode(applyByteMask(state.encode()));
             sinon.assert.callCount(onAddSpy, 5);
         }
     });
@@ -85,19 +86,19 @@ describe("ArraySchema", () => {
 
         const state = new State();
         const decodedState = new State();
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         state.player1.items.push(new Item("Item 0", 0));
         state.player1.items.push(new Item("Item 1", 1));
         state.player1.items.push(new Item("Item 2", 2));
         state.player1.items.push(new Item("Item 3", 3));
         state.player1.items.push(new Item("Item 4", 4));
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
         assert.equal(decodedState.player1.items.length, 5);
 
         // Remove one item
         state.player1.items.splice(2, 1);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(decodedState.player1.items.length, 4);
 
@@ -105,7 +106,7 @@ describe("ArraySchema", () => {
         state.player1.items
             .forEach((item, idx) => item.idx = idx);
         // After below encoding, Item 4 is not marked as `changed`
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         const resultPreEncoding = state.player1.items
             .map(stringifyItem).join(',');
@@ -137,23 +138,23 @@ describe("ArraySchema", () => {
 
         const state = new State();
         const decodedState = new State();
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         state.player.items.push(new Item("Item 1"));
         state.player.items.push(new Item("Item 2"));
         state.player.items.push(new Item("Item 3"));
         state.player.items.push(new Item("Item 4"));
         state.player.items.push(new Item("Item 5"));
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         // Remove Item 2
         const [ removedItem ] = state.player.items.splice(1, 1);
         assert.equal(removedItem.name, "Item 2");
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         // Update `name` of remaining item
         const preEncoding = state.player.items[1].name = "Item 3 changed!";
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(
             decodedState.player.items[1].name,
@@ -191,14 +192,14 @@ describe("ArraySchema", () => {
         state.items.push(new Item("Item Three", 3 * 10));
         state.items.push(new Item("Item Four", 4 * 10));
         state.items.push(new Item("Item Five", 5 * 10));
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         /**
          * Splice one item out (and remember its reference)
          */
         const [itemThree] = state.items.splice(2, 1);
         state.items.forEach(updateItem);
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         assert.strictEqual(state.items[0].name, 'Item One');
         assert.strictEqual(state.items[1].name, 'Item Two');
@@ -229,7 +230,7 @@ describe("ArraySchema", () => {
          */
         state.items.push(itemThree);
         state.items.forEach(updateItem);
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         // console.log(
         //     `After pushing that item back inside`,
@@ -269,20 +270,20 @@ describe("ArraySchema", () => {
 
         const state = new State();
         const decodedState = new State();
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         state.player1.items.push(new Item("Item 1"));
         state.player1.items.push(new Item("Item 2"));
         state.player1.items.push(new Item("Item 3"));
         state.player1.items.push(new Item("Item 4"));
 
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         const item1 = state.player1.items[0];
         state.player1.items.splice(0, 1);
         state.player2.items.push(item1);
 
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(decodedState.player1.items[0].name, "Item 2");
         assert.equal(decodedState.player1.items.length, 3);
@@ -291,19 +292,19 @@ describe("ArraySchema", () => {
         assert.equal(decodedState.player2.items.length, 1);
 
         state.player2.items.push(state.player1.items.splice(1, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(decodedState.player1.items.length, 2);
         assert.equal(decodedState.player2.items.length, 2);
 
         state.player2.items.push(state.player1.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(decodedState.player1.items.length, 1);
         assert.equal(decodedState.player2.items.length, 3);
 
         state.player2.items.push(state.player1.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.equal(decodedState.player1.items.length, 0);
         assert.equal(decodedState.player2.items.length, 4);
@@ -313,26 +314,26 @@ describe("ArraySchema", () => {
         console.log(decodedState.player2.items.map(item => item.name));
 
         state.player1.items.push(state.player2.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         state.player1.items.push(state.player2.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         state.player1.items.push(state.player2.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         state.player1.items.push(state.player2.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         console.log("FULL 2 >");
         console.log(decodedState.player1.items.map(item => item.name));
         console.log(decodedState.player2.items.map(item => item.name));
 
         state.player2.items.push(state.player1.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         state.player2.items.push(state.player1.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         state.player2.items.push(state.player1.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         state.player2.items.push(state.player1.items.splice(0, 1)[0]);
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         console.log("FULL 3 >");
         console.log(decodedState.player1.items.map(item => item.name));

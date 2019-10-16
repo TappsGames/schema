@@ -1,4 +1,6 @@
 import * as assert from "assert";
+
+import {applyByteMask} from "./helpers/bytemask";
 import { type, Context } from "../src/annotations";
 import { ArraySchema, MapSchema, Reflection } from "../src";
 import { Schema } from "../src/Schema";
@@ -61,23 +63,23 @@ describe("Polymorphism", () => {
         state.entityHolder.entity = createPlayer();
 
         const decodedState = new State();
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
         assert.ok(decodedState.entityHolder.entity instanceof Player);
         assert.ok(decodedState.entityHolder.entity instanceof Entity);
 
-        const decodedReflectedState: any = Reflection.decode(Reflection.encode(state));
-        decodedReflectedState.decode(state.encodeAll());
+        const decodedReflectedState: any = Reflection.decode(applyByteMask(Reflection.encode(state)));
+        decodedReflectedState.decode(applyByteMask(state.encodeAll()));
         assert.equal(decodedReflectedState.entityHolder.entity.x, 100);
         assert.equal(decodedReflectedState.entityHolder.entity.y, 200);
         assert.equal(decodedReflectedState.entityHolder.entity.name, "Jake");
         assert.equal(decodedReflectedState.entityHolder.entity.lvl, 5);
 
         state.entityHolder.entity = null;
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
 
         state.entityHolder.entity = createEnemy();
 
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
         assert.ok(decodedState.entityHolder.entity instanceof Enemy);
         assert.ok(decodedState.entityHolder.entity instanceof Entity);
     });
@@ -89,13 +91,13 @@ describe("Polymorphism", () => {
         state.arrayOfEntities.push(createEnemy());
 
         const decodedState = new State();
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
         assert.ok(decodedState.arrayOfEntities[0] instanceof Entity);
         assert.ok(decodedState.arrayOfEntities[1] instanceof Player);
         assert.ok(decodedState.arrayOfEntities[2] instanceof Enemy);
 
         state.arrayOfEntities.push(createPlayer());
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
 
         assert.ok(decodedState.arrayOfEntities[3] instanceof Entity);
         assert.ok(decodedState.arrayOfEntities[3] instanceof Player);
@@ -108,13 +110,13 @@ describe("Polymorphism", () => {
         state.mapOfEntities['enemy'] = createEnemy();
 
         const decodedState = new State();
-        decodedState.decode(state.encodeAll());
+        decodedState.decode(applyByteMask(state.encodeAll()));
         assert.ok(decodedState.mapOfEntities['entity'] instanceof Entity);
         assert.ok(decodedState.mapOfEntities['player'] instanceof Player);
         assert.ok(decodedState.mapOfEntities['enemy'] instanceof Enemy);
 
         state.mapOfEntities['player-2'] = createPlayer();
-        decodedState.decode(state.encode());
+        decodedState.decode(applyByteMask(state.encode()));
         assert.ok(decodedState.mapOfEntities['player-2'] instanceof Entity);
         assert.ok(decodedState.mapOfEntities['player-2'] instanceof Player);
     });

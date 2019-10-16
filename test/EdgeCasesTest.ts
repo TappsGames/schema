@@ -4,6 +4,7 @@ import * as nanoid from "nanoid";
 import { MapSchema, Reflection } from "../src";
 
 import { State, Player } from "./Schema";
+import {applyByteMask} from "./helpers/bytemask";
 
 describe("Edge cases", () => {
     describe("MapSchema", () => {
@@ -19,33 +20,33 @@ describe("Edge cases", () => {
             state.encodeAll();
 
             const decodedState1 = new State();
-            decodedState1.decode(state.encodeAll());
+            decodedState1.decode(applyByteMask(state.encodeAll()));
             state.mapOfPlayers[nanoid(8)] = new Player("Player " + i++, i++, i++);
 
             const decodedState2 = new State();
             state.mapOfPlayers[nanoid(8)] = new Player("Player " + i++, i++, i++);
-            decodedState2.decode(state.encodeAll());
+            decodedState2.decode(applyByteMask(state.encodeAll()));
 
             const decodedState3 = new State();
-            decodedState3.decode(state.encodeAll());
+            decodedState3.decode(applyByteMask(state.encodeAll()));
             state.mapOfPlayers[nanoid(8)] = new Player("Player " + i++, i++, i++);
 
             // // add 20 players
             // for (let i = 0; i < 2; i++) { state.mapOfPlayers[nanoid(8)] = new Player("Player " + i, i * 2, i * 2); }
 
             const encoded = state.encode();
-            decodedState1.decode(encoded);
-            decodedState2.decode(encoded);
-            decodedState3.decode(encoded);
+            decodedState1.decode(applyByteMask(encoded));
+            decodedState2.decode(applyByteMask(encoded));
+            decodedState3.decode(applyByteMask(encoded));
 
             const decodedState4 = new State();
             state.mapOfPlayers[nanoid(8)] = new Player("Player " + i++, i++, i++);
-            decodedState4.decode(state.encodeAll());
+            decodedState4.decode(applyByteMask(state.encodeAll()));
 
             assert.equal(JSON.stringify(decodedState1), JSON.stringify(decodedState2));
             assert.equal(JSON.stringify(decodedState2), JSON.stringify(decodedState3));
 
-            decodedState3.decode(state.encode());
+            decodedState3.decode(applyByteMask(state.encode()));
             assert.equal(JSON.stringify(decodedState3), JSON.stringify(decodedState4));
         });
     })
